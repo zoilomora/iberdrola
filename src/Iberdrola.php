@@ -24,6 +24,9 @@ class Iberdrola
     const URI_CONTRACT_SELECT = '/consumidores/rest/cto/seleccion/';
     const URI_ICP_STATUS = 'rearmeICP/consultarEstado';
     const URI_ICP_RECONNECT = 'rearmeICP/reconexion';
+    const URI_LIMITS_CONSUMPTION_DATES = 'consumoNew/obtenerLimiteFechasConsumo';
+    const URI_READINGS_OF_THE_DAY = 'consumoNew/obtenerDatosConsumo/fechaInicio/' .
+        '{date}/colectivo/USU/frecuencia/horas/acumular/false';
 
     private $_client;
     private $_email;
@@ -215,5 +218,82 @@ class Iberdrola
         }
 
         return true;
+    }
+
+    /**
+     * Get Limits Consumption Dates
+     *
+     * @return array|bool
+     */
+    public function getLimitsConsumptionDates()
+    {
+        $response = $this->_client->get(self::URI_LIMITS_CONSUMPTION_DATES);
+        if ($response->getStatusCode() !== 200) {
+            $this->_isLogged = false;
+            return false;
+        }
+
+        $data = json_decode($response->getBody()->getContents());
+        $result = [
+            'min' => \DateTime::createFromFormat('d-m-YH:i:s', $data->fechaMinima),
+            'max' => \DateTime::createFromFormat('d-m-YH:i:s', $data->fechaMaxima),
+        ];
+
+        return $result;
+    }
+
+    /**
+     * Get readings of the day
+     *
+     * @param \DateTime $day Day from which the historical
+     *
+     * @return array|bool
+     */
+    public function getReadingsOfTheDay(\DateTime $day)
+    {
+        $url = str_replace(
+            '{date}',
+            $day->format('d-m-YH:i:s'),
+            self::URI_READINGS_OF_THE_DAY
+        );
+
+        $response = $this->_client->get($url);
+        if ($response->getStatusCode() !== 200) {
+            $this->_isLogged = false;
+            return false;
+        }
+
+        return $this->_normalizeMeasurements($response->getBody()->getContents());
+    }
+
+    /**
+     * Normalize Measurements
+     *
+     * @param string $json JSON returned
+     *
+     * @return array|bool
+     */
+    private function _normalizeMeasurements($json)
+    {
+        $object = json_decode(utf8_encode($json));
+
+        $date = \DateTime::createFromFormat('d-m-YH:i:s', $object->fechaPeriodo);
+        $measurements = [];
+        foreach ($object->y->data[0] as $item) {
+            $measurements[] = [
+                'date' => $date->format('Y-m-d H:i:s'),
+                'value' => doubleval($item->valor),
+            ];
+
+            try {
+                $interval = new \DateInterval('PT1H');
+                $date->add($interval);
+            } catch (\Exception $ex) {
+                echo $ex->getMessage() . PHP_EOL;
+                return false;
+            }
+        }
+
+        return $measurements;
     }
 }

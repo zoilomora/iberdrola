@@ -24,6 +24,8 @@ if (($floatValue/1000) >= $limit) {
 }
 ```
 
+You can see more in the **examples folder**.
+
 ## License
 Licensed under the [MIT license](http://opensource.org/licenses/MIT)
 
