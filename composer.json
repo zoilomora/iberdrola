@@ -1,0 +1,34 @@
+{
+    "name": "zoilomora/iberdrola",
+    "description": "",
+    "version": "1.0.0",
+    "type": "library",
+    "keywords": [
+        "iberdrola",
+        "api",
+        "icp",
+        "automatic",
+        "electricity",
+        "reading"
+    ],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Zoilo Mora",
+            "email": "zoilo.mora@hotmail.com",
+            "homepage": "http://zoilomora.net",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "guzzlehttp/guzzle": "^6.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "ZoiloMora\\Iberdrola\\": "src/"
+        }
+    },
+    "support": {
+        "issues": "https://github.com/zoilomora/iberdrola/issues"
+    }
+}
