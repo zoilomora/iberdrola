@@ -1,6 +1,6 @@
 {
     "name": "zoilomora/iberdrola",
-    "description": "",
+    "description": "Communication with the Iberdrola API",
     "version": "1.0.0",
     "type": "library",
     "keywords": [
@@ -21,6 +21,8 @@
         }
     ],
     "require": {
+        "php": ">=7.0",
+        "ext-json": "*",
         "guzzlehttp/guzzle": "^6.3"
     },
     "autoload": {

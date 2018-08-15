@@ -46,7 +46,7 @@ class Iberdrola
                     'User-Agent' => self::USER_AGENT,
                     'Content-Type' => 'application/json',
                     'movilAPP' => 'si',
-                    'tipoAPP' => 'ANDROID',
+                    'tipoAPP' => 'IOS',
                     'esVersionNueva' => '1',
                     'idioma' => 'es',
                 ],
