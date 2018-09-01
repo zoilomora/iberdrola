@@ -282,7 +282,7 @@ class Iberdrola
         foreach ($object->y->data[0] as $item) {
             $measurements[] = [
                 'date' => $date->format('Y-m-d H:i:s'),
-                'value' => doubleval($item->valor),
+                'value' => $item ? doubleval($item->valor) : null,
             ];
 
             try {
