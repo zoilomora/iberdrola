@@ -32,6 +32,8 @@ class Iberdrola
 
     private $isLogged;
 
+    private $timeZoneService;
+
     /**
      * Iberdrola constructor.
      * @param string $email
@@ -57,6 +59,7 @@ class Iberdrola
         $this->email = $email;
         $this->password = $password;
         $this->isLogged = false;
+        $this->timeZoneService = new TimeZoneService();
     }
 
     /**
@@ -187,6 +190,10 @@ class Iberdrola
      */
     public function reconnectIcp(): bool
     {
+        if ($this->isLogged === false) {
+            $this->login();
+        }
+
         $response = $this->client->post(self::URI_ICP_RECONNECT);
         if ($response->getStatusCode() !== 200) {
             $this->isLogged = false;
@@ -216,6 +223,10 @@ class Iberdrola
      */
     public function getLimitsConsumptionDates(): array
     {
+        if ($this->isLogged === false) {
+            $this->login();
+        }
+
         $response = $this->client->get(self::URI_LIMITS_CONSUMPTION_DATES);
         if ($response->getStatusCode() !== 200) {
             $this->isLogged = false;
@@ -239,6 +250,10 @@ class Iberdrola
      */
     public function getReadingsOfTheDay(\DateTime $day): array
     {
+        if ($this->isLogged === false) {
+            $this->login();
+        }
+
         $url = str_replace(
             '{date}',
             $day->format('d-m-YH:i:s'),
@@ -260,25 +275,23 @@ class Iberdrola
      * @return array|bool
      * @throws \Exception
      */
-    private function normalizeMeasurements($json)
+    private function normalizeMeasurements($json): array
     {
         $object = json_decode(utf8_encode($json));
 
-        $date = \DateTime::createFromFormat('d-m-YH:i:s', $object->fechaPeriodo);
+        $date = $this->timeZoneService->assignTimeZone(
+            \DateTime::createFromFormat('d-m-YH:i:s', $object->fechaPeriodo)
+        );
+
         $measurements = [];
         foreach ($object->y->data[0] as $item) {
+            $this->timeZoneService->changeTimeZone($date);
             $measurements[] = [
-                'date' => $date->format('Y-m-d H:i:s'),
+                'date' => $date->format(DATE_ATOM),
                 'value' => $item ? doubleval($item->valor) : null,
             ];
 
-            try {
-                $interval = new \DateInterval('PT1H');
-                $date->add($interval);
-            } catch (\Exception $ex) {
-                echo $ex->getMessage() . PHP_EOL;
-                return false;
-            }
+            $date->modify('+1 hour');
         }
 
         return $measurements;
