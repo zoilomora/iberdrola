@@ -13,11 +13,9 @@ namespace ZoiloMora\Iberdrola;
  */
 class Iberdrola
 {
-    const URI_BASE = 'https://www.iberdroladistribucionelectrica.com/consumidores' .
-        '/rest/';
+    const URI_BASE = 'https://www.iberdroladistribucionelectrica.com/consumidores/rest/';
     const USER_AGENT = 'Mozilla/5.0 (iPhone; CPU iPhone OS 11_4_1 like Mac OS X)' .
         'AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15G77';
-
     const URI_LOGIN = 'loginNew/login';
     const URI_READING = 'escenarioNew/obtenerMedicionOnline/12';
     const URI_CONTRACT_LIST = 'cto/listaCtos/';
@@ -28,17 +26,16 @@ class Iberdrola
     const URI_READINGS_OF_THE_DAY = 'consumoNew/obtenerDatosConsumo/fechaInicio/' .
         '{date}/colectivo/USU/frecuencia/horas/acumular/false';
 
-    private $_client;
-    private $_email;
-    private $_password;
+    private $client;
+    private $email;
+    private $password;
 
-    private $_isLogged;
+    private $isLogged;
 
     /**
      * Iberdrola constructor.
-     *
-     * @param string $email    Email address
-     * @param string $password Password
+     * @param string $email
+     * @param string $password
      */
     public function __construct(string $email, string $password)
     {
@@ -56,23 +53,22 @@ class Iberdrola
             ],
             'cookies' => true,
         ];
-        $this->_client = new \GuzzleHttp\Client($config);
-        $this->_email = $email;
-        $this->_password = $password;
-        $this->_isLogged = false;
+        $this->client = new \GuzzleHttp\Client($config);
+        $this->email = $email;
+        $this->password = $password;
+        $this->isLogged = false;
     }
 
     /**
      * Login to the API
-     *
      * @return bool
      */
-    private function _login()
+    private function login(): bool
     {
         $options = [
             \GuzzleHttp\RequestOptions::JSON => [
-                $this->_email,
-                $this->_password,
+                $this->email,
+                $this->password,
                 null,
                 'iOS 11.4.1',
                 'Movil',
@@ -84,26 +80,25 @@ class Iberdrola
                 'n',
             ],
         ];
-        $response = $this->_client->post(self::URI_LOGIN, $options);
+        $response = $this->client->post(self::URI_LOGIN, $options);
 
-        $this->_isLogged = $response->getStatusCode() === 200 ? true : false;
-        return $this->_isLogged;
+        $this->isLogged = $response->getStatusCode() === 200 ? true : false;
+        return $this->isLogged;
     }
 
     /**
      * Get the list of contracts
-     *
      * @return bool
      */
-    public function getListContracts()
+    public function getListContracts(): bool
     {
-        if ($this->_isLogged === false) {
-            $this->_login();
+        if ($this->isLogged === false) {
+            $this->login();
         }
 
-        $response = $this->_client->get(self::URI_CONTRACT_LIST);
+        $response = $this->client->get(self::URI_CONTRACT_LIST);
         if ($response->getStatusCode() !== 200) {
-            $this->_isLogged = false;
+            $this->isLogged = false;
             return false;
         }
 
@@ -118,21 +113,19 @@ class Iberdrola
 
     /**
      * Select a contract for the following operations
-     *
      * @param string $id Contract ID
-     *
      * @return bool
      */
-    public function selectContract(string $id)
+    public function selectContract(string $id): bool
     {
-        if ($this->_isLogged === false) {
-            $this->_login();
+        if ($this->isLogged === false) {
+            $this->login();
         }
 
         $uri = sprintf('%s%s', self::URI_CONTRACT_SELECT, $id);
-        $response = $this->_client->get($uri);
+        $response = $this->client->get($uri);
         if ($response->getStatusCode() !== 200) {
-            $this->_isLogged = false;
+            $this->isLogged = false;
             return false;
         }
 
@@ -147,18 +140,17 @@ class Iberdrola
 
     /**
      * Get meter reading
-     *
      * @return bool|mixed
      */
-    public function getReading()
+    public function getReading(): \stdClass
     {
-        if ($this->_isLogged === false) {
-            $this->_login();
+        if ($this->isLogged === false) {
+            $this->login();
         }
 
-        $response = $this->_client->get(self::URI_READING);
+        $response = $this->client->get(self::URI_READING);
         if ($response->getStatusCode() !== 200) {
-            $this->_isLogged = false;
+            $this->isLogged = false;
             return false;
         }
 
@@ -167,18 +159,17 @@ class Iberdrola
 
     /**
      * Get the status of the ICP
-     *
      * @return bool
      */
-    public function getIcpStatus()
+    public function getIcpStatus(): bool
     {
-        if ($this->_isLogged === false) {
-            $this->_login();
+        if ($this->isLogged === false) {
+            $this->login();
         }
 
-        $response = $this->_client->post(self::URI_ICP_STATUS);
+        $response = $this->client->post(self::URI_ICP_STATUS);
         if ($response->getStatusCode() !== 200) {
-            $this->_isLogged = false;
+            $this->isLogged = false;
             return false;
         }
 
@@ -192,14 +183,13 @@ class Iberdrola
 
     /**
      * Reconnect ICP
-     *
      * @return bool
      */
-    public function reconnectIcp()
+    public function reconnectIcp(): bool
     {
-        $response = $this->_client->post(self::URI_ICP_RECONNECT);
+        $response = $this->client->post(self::URI_ICP_RECONNECT);
         if ($response->getStatusCode() !== 200) {
-            $this->_isLogged = false;
+            $this->isLogged = false;
             return false;
         }
 
@@ -222,14 +212,13 @@ class Iberdrola
 
     /**
      * Get Limits Consumption Dates
-     *
      * @return array|bool
      */
-    public function getLimitsConsumptionDates()
+    public function getLimitsConsumptionDates(): array
     {
-        $response = $this->_client->get(self::URI_LIMITS_CONSUMPTION_DATES);
+        $response = $this->client->get(self::URI_LIMITS_CONSUMPTION_DATES);
         if ($response->getStatusCode() !== 200) {
-            $this->_isLogged = false;
+            $this->isLogged = false;
             return false;
         }
 
@@ -244,12 +233,11 @@ class Iberdrola
 
     /**
      * Get readings of the day
-     *
      * @param \DateTime $day Day from which the historical
-     *
      * @return array|bool
+     * @throws \Exception
      */
-    public function getReadingsOfTheDay(\DateTime $day)
+    public function getReadingsOfTheDay(\DateTime $day): array
     {
         $url = str_replace(
             '{date}',
@@ -257,23 +245,22 @@ class Iberdrola
             self::URI_READINGS_OF_THE_DAY
         );
 
-        $response = $this->_client->get($url);
+        $response = $this->client->get($url);
         if ($response->getStatusCode() !== 200) {
-            $this->_isLogged = false;
+            $this->isLogged = false;
             return false;
         }
 
-        return $this->_normalizeMeasurements($response->getBody()->getContents());
+        return $this->normalizeMeasurements($response->getBody()->getContents());
     }
 
     /**
      * Normalize Measurements
-     *
      * @param string $json JSON returned
-     *
      * @return array|bool
+     * @throws \Exception
      */
-    private function _normalizeMeasurements($json)
+    private function normalizeMeasurements($json)
     {
         $object = json_decode(utf8_encode($json));
 
